@@ -1,67 +1,150 @@
+// Issue filter Component to filter the issues in the tables
 const IssueFilter = () => {
   return <h1>Issue Filter</h1>;
 };
 
-const IssueRow = (props) => {
+// Issue Row Component: template for the issues displayed in the table
+// issueList is the object containing the issue details
+const IssueRow = ({ issue }) => {
+  // returns the view of each row in the table
   return (
     <tr>
-      <td style={props.rowStyle}>{props.id}</td>
-      <td style={props.rowStyle}>{props.title}</td>
+      <td>{issue.id}</td>
+      <td>{issue.status}</td>
+      <td>{issue.author}</td>
+      <td>{issue.created.toLocaleDateString()}</td>
+      <td>{issue.due.toLocaleDateString()}</td>
+      <td>{issue.title}</td>
     </tr>
-  )
-}
-
-const IssueTable = () => {
-  const rowStyle = {border:"1px solid black"};
-  const issues = [
-    {id: 5, title: "This is the Fifth issue"},
-    {id: 6, title: "This is the Sixth issue"}
-  ];
-
-  const displayIssues = issues.map(issue => 
-    <IssueRow rowStyle={rowStyle} id={issue.id} title = {issue.title} />
-  )
-
-  return (
-    <div>
-      <h2>This is a placeholder for the Issue Table</h2>
-      <table style={{borderCollapse:"collapse"}}>
-        <thead>
-          <tr>
-            <th style={rowStyle}>ID</th>
-            <th style={rowStyle}>TITLE</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style={rowStyle}>1</td>
-            <td style={rowStyle}>This is the First Issue</td>
-          </tr>
-          <tr>
-            <td style={rowStyle}>2</td>
-            <td style={rowStyle}>This is the Second Issue</td>
-          </tr>
-          <IssueRow rowStyle ={rowStyle} id={3} title={"This is the Third issue"}/>
-          <IssueRow rowStyle ={rowStyle} id={4} title={"This is the Fourth issue"}/>
-          {displayIssues}
-        </tbody>
-      </table>
-    </div>
   );
 };
 
-const AddIssue = () => {
-  return <h1>Add Issue</h1>;
+// Issue Table Component: containing the table of issues
+// issues is the object containing the issues
+const IssueTable = ({ issues }) => {
+  // issuesRow is an array mapping through the issues object
+  // and returning the IssueRow components for each issue
+  const issuesRow = issues.map((issue) => (
+    <IssueRow key={issue.id} issue={issue} />
+  ));
+
+  // returns the view of the table with the array of IssueRow components
+  // from the map above
+  return (
+    <>
+      <h2>This is a placeholder for the Issue Table</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>STATUS</th>
+            <th>AUTHOR</th>
+            <th>CREATED</th>
+            <th>DUE</th>
+            <th>TITLE</th>
+          </tr>
+        </thead>
+        <tbody>{issuesRow}</tbody>
+      </table>
+    </>
+  );
+};
+
+
+// Add Issue Component: to add a new issue to the table
+// this component is a child of the IssueList component
+// AddSingleIssue is the function to add a single issue to the table
+// and is passed as a prop from the IssueList component
+const AddIssue = ({ AddSingleIssue }) => {
+  // Use Effect Hook is used to run the function immediately after the component is rendered
+  // React.useEffect(() => {
+  //   console.log("useEffect called");
+  //   //Add Single Issue to th state
+  //   AddSingleIssue(newIssue);
+  // }, []);
+
+  // handleSubmit function is called when the form is submitted
+  function handleSubmit(e) {
+    e.preventDefault();
+    let form = document.forms.addForm;
+    let newIssue = {
+      status: form.status.value,
+      author: form.author.value,
+      effort: form.effort.value,
+      created: new Date(form.created.value),
+      due: new Date(form.due.value),
+      title: form.title.value
+    };
+    
+    // we dont use useEffect hook here because we want to 
+    // add the issue only when the user clicks on the submit button
+    // not automatically on component render or re-renderf
+    AddSingleIssue(newIssue);
+    form.reset(); 
+  }
+
+  return (
+    <>
+      <h1>Add Issue</h1>
+      <form name="addForm" onSubmit={handleSubmit}>
+        <input type='text' name='status' placeholder="Status" /> <br />
+        <input type='text' name='author' placeholder="Author" /> <br />
+        <input type='number' name='effort' placeholder="Effort" /> <br />   
+        <input type='date' name='created' placeholder="Created" /> <br />
+        <input type='date' name='due' placeholder="Due" /> <br />
+        <input type='text' name='title' placeholder="Title" /> <br />
+        <button type="submit">Submit</button>
+      </form>
+    </>
+  );
+};
+
+const IssueList = () => {
+  const tempIssues = [
+    {
+      id: 1,
+      status: "Assigned",
+      author: "Random Person",
+      effort: 5,
+      created: new Date("2022-09-18"),
+      due: new Date("2022-09-19"),
+      title: "This is the First issue",
+    },
+    {
+      id: 2,
+      status: "Pending",
+      author: "Designated Person",
+      effort: 10,
+      created: new Date("2022-09-17"),
+      due: new Date("2022-09-20"),
+      title: "This is the Second issue",
+    },
+  ];
+
+  const [issues, setIssues] = React.useState(tempIssues);
+
+  const AddSingleIssue = (newIssue) => {
+    newIssue.id = issues.length + 1;
+    let IssueList = issues.slice();
+    IssueList.push(newIssue);
+    console.log(IssueList);
+    setIssues(IssueList);
+    // tempIssues.push(newIssue);
+    // setIssues(tempIssues);
+  };
+
+  return (
+    <>
+      <h1>Issue Tracker</h1>
+      <IssueFilter />
+      <hr />
+      <IssueTable issues={issues} />
+      <hr />
+      <AddIssue AddSingleIssue={AddSingleIssue} />
+    </>
+  );
 };
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
-root.render(
-  <React.StrictMode>
-    <IssueFilter />
-    <hr />
-    <IssueTable />
-    <hr />
-    <AddIssue />
-  </React.StrictMode>
-);
+root.render(<IssueList />);
