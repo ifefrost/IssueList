@@ -12,8 +12,9 @@ const IssueRow = ({ issue }) => {
       <td>{issue.id}</td>
       <td>{issue.status}</td>
       <td>{issue.author}</td>
-      <td>{issue.created.toLocaleDateString()}</td>
-      <td>{issue.due.toLocaleDateString()}</td>
+      <td>{issue.effort}</td>
+      <td>{issue.created.toString()}</td>
+      <td>{issue.due.toString()}</td>
       <td>{issue.title}</td>
     </tr>
   );
@@ -39,6 +40,7 @@ const IssueTable = ({ issues }) => {
             <th>ID</th>
             <th>STATUS</th>
             <th>AUTHOR</th>
+            <th>EFFORT</th>
             <th>CREATED</th>
             <th>DUE</th>
             <th>TITLE</th>
@@ -49,7 +51,6 @@ const IssueTable = ({ issues }) => {
     </>
   );
 };
-
 
 // Add Issue Component: to add a new issue to the table
 // this component is a child of the IssueList component
@@ -70,65 +71,113 @@ const AddIssue = ({ AddSingleIssue }) => {
     let newIssue = {
       status: form.status.value,
       author: form.author.value,
-      effort: form.effort.value,
-      created: new Date(form.created.value),
-      due: new Date(form.due.value),
-      title: form.title.value
+      effort: parseInt(form.effort.value),
+      title: form.title.value,
     };
-    
-    // we dont use useEffect hook here because we want to 
+
+    // we dont use useEffect hook here because we want to
     // add the issue only when the user clicks on the submit button
     // not automatically on component render or re-renderf
     AddSingleIssue(newIssue);
-    form.reset(); 
+    form.reset();
   }
 
   return (
     <>
       <h1>Add Issue</h1>
-      <form name="addForm" onSubmit={handleSubmit}>
-        <input type='text' name='status' placeholder="Status" /> <br />
-        <input type='text' name='author' placeholder="Author" /> <br />
-        <input type='number' name='effort' placeholder="Effort" /> <br />   
-        <input type='date' name='created' placeholder="Created" /> <br />
-        <input type='date' name='due' placeholder="Due" /> <br />
-        <input type='text' name='title' placeholder="Title" /> <br />
-        <button type="submit">Submit</button>
+      <form name='addForm' onSubmit={handleSubmit}>
+        <input type='text' name='status' placeholder='Status' /> <br />
+        <input type='text' name='author' placeholder='Author' /> <br />
+        <input type='number' name='effort' placeholder='Effort' /> <br />
+        <input type='text' name='title' placeholder='Title' /> <br />
+        <button type='submit'>Submit</button>
       </form>
     </>
   );
 };
 
 const IssueList = () => {
-  const tempIssues = [
-    {
-      id: 1,
-      status: "Assigned",
-      author: "Random Person",
-      effort: 5,
-      created: new Date("2022-09-18"),
-      due: new Date("2022-09-19"),
-      title: "This is the First issue",
-    },
-    {
-      id: 2,
-      status: "Pending",
-      author: "Designated Person",
-      effort: 10,
-      created: new Date("2022-09-17"),
-      due: new Date("2022-09-20"),
-      title: "This is the Second issue",
-    },
-  ];
+  // const tempIssues = [
+  //   {
+  //     id: 1,
+  //     status: "Assigned",
+  //     author: "Random Person",
+  //     effort: 5,
+  //     created: new Date("2022-09-18"),
+  //     due: new Date("2022-09-19"),
+  //     title: "This is the First issue",
+  //   },
+  //   {
+  //     id: 2,
+  //     status: "Pending",
+  //     author: "Designated Person",
+  //     effort: 10,
+  //     created: new Date("2022-09-17"),
+  //     due: new Date("2022-09-20"),
+  //     title: "This is the Second issue",
+  //   },
+  // ];
 
-  const [issues, setIssues] = React.useState(tempIssues);
+  const [issues, setIssues] = React.useState([]);
+
+  const query = `query {
+    issueList {
+      id title status author
+      created effort due
+    }
+  }`;
+
+  const fetchIssueList = () => {
+    fetch("/graphql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        setIssues(result.data.issueList);
+      });
+  };
+
+  React.useEffect(() => {
+    fetchIssueList();
+  }, []);
 
   const AddSingleIssue = (newIssue) => {
-    newIssue.id = issues.length + 1;
-    let IssueList = issues.slice();
-    IssueList.push(newIssue);
-    console.log(IssueList);
-    setIssues(IssueList);
+    let enteredIssue = newIssue;
+    console.log(enteredIssue);
+
+    const query = `mutation addSingleIssue {
+      addSingleIssue(issue: {
+        status: "${enteredIssue.status}",
+        author: "${enteredIssue.author}",
+        effort: ${enteredIssue.effort},
+        title: "${enteredIssue.title}"
+      }) {
+        id
+        status
+        author
+        effort
+        created
+        due
+        title
+      }
+    }`;
+    fetch("/graphql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    }).then(async (response) => {
+      let data = await response.json();
+      console.log(data);
+      fetchIssueList();
+    });
+
+    // newIssue.id = issues.length + 1;
+    // let IssueList = issues.slice();
+    // IssueList.push(newIssue);
+    // console.log(IssueList);
+    // setIssues(IssueList);
     // tempIssues.push(newIssue);
     // setIssues(tempIssues);
   };
