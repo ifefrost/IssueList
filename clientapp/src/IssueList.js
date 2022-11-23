@@ -2,19 +2,22 @@ import React from 'react';
 import IssueFilter from './IssueFilter';
 import IssueTable from './IssueTable';
 import AddIssue from './AddIssue';
+import { useLocation } from 'react-router-dom';
 
 const IssueList = () => {
 
     const [issues, setIssues] = React.useState([]);
-  
+    // const {handleIssue} = useParams();
+    const search = useLocation().search;
+    const value = new URLSearchParams(search).get('author');
     const query = `query {
       issueList {
-        id title status author
+        _id id title status author
         created effort due
       }
     }`;
   
-    const fetchIssueList = () => {
+    const fetchIssueList = (value) => {
       fetch("http://localhost:3001/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -22,22 +25,27 @@ const IssueList = () => {
       })
         .then((response) => response.json())
         .then((result) => {
-          setIssues(result.data.issueList);
+          if (value) {
+            setIssues(result.data.issueList.filter((issue) => 
+            issue.author === value)
+            );
+          } else {
+            setIssues(result.data.issueList);
+          }
         });
     };
   
     React.useEffect(() => {
-      fetchIssueList();
+      fetchIssueList(value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [value]);
   
-    const AddSingleIssue = (newIssue) => {
+    const AddSingleIssue = async (newIssue) => {
       let enteredIssue = newIssue;
       console.log(enteredIssue);
   
-      const query = `mutation addSingleIssue {
+      const query = `mutation {
         addSingleIssue(issue: {
-          status: "${enteredIssue.status}",
           author: "${enteredIssue.author}",
           effort: ${enteredIssue.effort},
           title: "${enteredIssue.title}"
@@ -51,7 +59,7 @@ const IssueList = () => {
           title
         }
       }`;
-      fetch("/graphql", {
+      await fetch("http://localhost:3001/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),

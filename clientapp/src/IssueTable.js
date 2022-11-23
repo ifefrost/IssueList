@@ -12,7 +12,7 @@ const IssueTable = ({ issues }) => {
     // from the map above
     return (
       <>
-        <h2>This is a placeholder for the Issue Table</h2>
+        <h2>Issue Table</h2>
         <table>
           <thead>
             <tr>
@@ -23,6 +23,7 @@ const IssueTable = ({ issues }) => {
               <th>CREATED</th>
               <th>DUE</th>
               <th>TITLE</th>
+              <th>EDIT</th>
             </tr>
           </thead>
           <tbody>{issuesRow}</tbody>

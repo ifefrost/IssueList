@@ -17,17 +17,23 @@ const AddIssue = ({ AddSingleIssue }) => {
       // add the issue only when the user clicks on the submit button
       // not automatically on component render or re-renderf
       AddSingleIssue(newIssue);
-      form.reset();
+      //form.reset();
     }
   
     return (
       <>
-        <h1>Add Issue</h1>
+        <h2>Add Issue</h2>
         <form name='addForm' onSubmit={handleSubmit}>
-          <input type='text' name='status' placeholder='Status' /> <br />
-          <input type='text' name='author' placeholder='Author' /> <br />
-          <input type='number' name='effort' placeholder='Effort' /> <br />
-          <input type='text' name='title' placeholder='Title' /> <br />
+          <select name='status'>
+            {['New', 'Assigned', 'Fixed', 'Closed'].map((val,index) =>
+              <option key={index} value={val}>
+                {val}
+              </option>
+            )}
+          </select>
+          <input type='text' name='author' placeholder='Author' />
+          <input type='number' name='effort' placeholder='Effort' />
+          <input type='text' name='title' placeholder='Title' />
           <button type='submit'>Submit</button>
         </form>
       </>

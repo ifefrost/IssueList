@@ -1,0 +1,44 @@
+    enum StatusType {
+        New
+        Assigned
+        Fixed
+        Closed
+    }
+
+    input inputIssue{
+        status: StatusType = New
+        author: String
+        effort: Int
+        title: String
+    }
+
+    type issue {
+        _id: String!
+        id: Int
+        status: StatusType
+        author: String
+        effort: Int
+        created: String
+        due: String
+        title: String
+    }
+
+    input modifyIssue {
+        _id: String!
+        status: StatusType = New
+        author: String
+        effort: Int
+        title: String
+    }
+
+    type Query {
+        about: String!
+        issueList(author: String): [issue]
+    }
+
+    type Mutation {
+        setAboutMessage(message: String!): String
+        addSingleIssue(issue: inputIssue): issue
+        foundIssue(_id: String!): issue
+        updateIssue(modifyIssue: modifyIssue): Boolean 
+    }

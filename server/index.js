@@ -1,37 +1,12 @@
 const express = require("express");
+const fs = require("fs");
 require('./models/db');
 const Issue = require('./models/issues');
 
 // This is GraphQL code start
 const { ApolloServer } = require("apollo-server-express");
 
-const typeDefs = `
-  input inputIssue {
-    status: String!
-    author: String
-    effort: Int
-    title: String
-  }
-
-  type issue {
-    id: Int!
-    status: String!
-    author: String
-    effort: Int
-    created: String
-    due: String
-    title: String
-  }
-  type Query {
-    about: String!
-    issueList: [issue]
-  }
-  type Mutation {
-    setAboutMessage(message: String!): String
-    addSingleIssue(issue: inputIssue): issue
-  }
-  `;
-
+let aboutMessage = "About message tester";
 
   const resolvers = {
     Query: {
@@ -41,11 +16,32 @@ const typeDefs = `
     Mutation: {
       setAboutMessage,
       addSingleIssue,
+      foundIssue,
+      updateIssue
     },
   };
 
+  async function updateIssue(_, {modifyIssue}) {
+    console.log(modifyIssue);
+    if(modifyIssue._id){
+      await Issue.findOneAndUpdate({_id: modifyIssue._id}, {
+        title: modifyIssue.title,
+        author: modifyIssue.author,
+        effort: modifyIssue.effort,
+        status: modifyIssue.status,
+      });
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  async function foundIssue(_, {_id}){
+    console.log(_id);
+    return await Issue.findById(_id);
+  }
 
-  function addSingleIssue(_, {issue}) {
+  async function addSingleIssue(_, {issue}) {
     const query = Issue.find({});
     query.count(function(err, count){
       let newIssue = {};
@@ -70,8 +66,14 @@ const typeDefs = `
     // Issue.create(issue);
   }
 
-  async function issueList(){
-    return await Issue.find({});
+  async function issueList(_, {author}){
+    console.log(author);
+    let query = Issue.find({});
+    if(author){
+      query.or({author: author});
+    }
+    console.log(query);
+    return await query.exec();
     // return tempIssues
   }
 
@@ -79,7 +81,9 @@ const typeDefs = `
     return (aboutMessage = message);
   }
 
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer({ 
+    typeDefs: fs.readFileSync('graphql_schema', 'utf-8'),
+    resolvers, });
 
 // This is GraphQL code end
 const app = express();
